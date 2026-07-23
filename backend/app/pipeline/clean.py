@@ -40,9 +40,15 @@ def _mask_upi(text: str) -> str:
 
 
 def dedup_key(txn: RawTransaction) -> str:
-    """Prefer UTR; else compose from date+amount+counterparty."""
+    """Prefer UTR/txn-id, but keep direction+amount in the key.
+
+    PhonePe reuses one Transaction ID across a debit/credit pair (e.g. UPI
+    Lite money moves), so keying on the reference alone would collapse two
+    genuine transactions. Direction+amount keeps them distinct while still
+    deduping the same row seen in both the PDF and CSV exports.
+    """
     if txn["reference_id"]:
-        base = f"ref:{txn['reference_id']}"
+        base = f"ref:{txn['reference_id']}|{txn['direction']}|{txn['amount']}"
     else:
         base = (
             f"{txn['txn_date'].date()}|{txn['amount']}|"

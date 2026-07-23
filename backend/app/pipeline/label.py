@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from app.models import FEATURE_COLUMNS
+from app.models import CLUSTERING_COLUMNS
 
-# indices into FEATURE_COLUMNS
-_I = {name: i for i, name in enumerate(FEATURE_COLUMNS)}
+# indices into the clustering feature vector (centroids come in this order)
+_I = {name: i for i, name in enumerate(CLUSTERING_COLUMNS)}
 
 
 def _buckets(centroids: np.ndarray) -> np.ndarray:
@@ -35,8 +35,6 @@ def _summary(centroid: np.ndarray) -> dict:
         "merchant_frequency": round(float(np.expm1(centroid[_I["merchant_frequency"]])), 1),
         "recurring_share": round(float(centroid[_I["is_recurring"]]), 2),
         "amount_stability": round(float(centroid[_I["amount_stability"]]), 2),
-        "dow_sin": round(float(centroid[_I["dow_sin"]]), 2),
-        "dow_cos": round(float(centroid[_I["dow_cos"]]), 2),
     }
 
 
@@ -48,23 +46,26 @@ def label_clusters(centroids_original: np.ndarray) -> list[dict]:
         row = b[i]
         recurring = row[_I["is_recurring"]]
         stability = row[_I["amount_stability"]]
-        amount = row[_I["log_amount"]]
         frequency = row[_I["merchant_frequency"]]
-        # dow_cos high => weekday-leaning; low => weekend-leaning (Sat/Sun)
-        weekend = row[_I["dow_cos"]] == 0
+        # Absolute average rupee value of the cluster (not a relative bucket) so
+        # "big-ticket" only ever means genuinely large, never just "highest of
+        # three small clusters".
+        avg = float(np.expm1(centroids_original[i][_I["log_amount"]]))
+        big = avg >= 1500
+        small = avg <= 150
 
-        if recurring == 2 and stability == 2:
+        # Lead with the dimensions that actually separate a personal dataset:
+        # recurring, then frequency, then stability; amount only refines.
+        if recurring == 2:
             label = "Recurring bills & subscriptions"
-        elif amount == 0 and frequency == 2:
-            label = "Small frequent purchases"
-        elif amount == 2 and frequency == 0:
-            label = "Large one-off purchases"
-        elif weekend and amount >= 1:
-            label = "Weekend discretionary spend"
-        elif amount == 2:
-            label = "Big-ticket spending"
         elif frequency == 2:
-            label = "Everyday habitual spend"
+            label = "Frequent big-ticket spending" if big else "Frequent everyday spending"
+        elif big:
+            label = "Large one-off purchases"
+        elif stability == 2 and frequency <= 1:
+            label = "One-off & occasional spending"
+        elif small:
+            label = "Small everyday spend"
         else:
             label = "Mid-size regular spend"
 

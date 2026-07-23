@@ -31,7 +31,11 @@ from app.pipeline.features import build_features
 from app.pipeline.insights import generate_insights
 from app.pipeline.label import label_clusters
 
-OWNER_TERMS = ["self", "own account", "my account"]
+# Terms that mark a counterparty as the account owner or close family, so the
+# transfer is excluded from spend analysis (money moved, not spent). Edit this
+# list to match your own family/self handles.
+OWNER_TERMS = ["self", "own account", "my account", "bageyawadi", "sampath",
+               "upi lite"]
 
 
 def latest_run_id(db: Session) -> str | None:

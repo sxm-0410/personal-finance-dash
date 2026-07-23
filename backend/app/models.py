@@ -101,7 +101,7 @@ class Feature(Base):
     transaction: Mapped[Transaction] = relationship(back_populates="feature")
 
 
-# Ordered feature vector used everywhere (scaler, clustering, centroids).
+# All engineered features — computed and stored for display/analysis.
 FEATURE_COLUMNS = [
     "log_amount",
     "dow_sin",
@@ -109,6 +109,17 @@ FEATURE_COLUMNS = [
     "day_of_month_norm",
     "merchant_frequency",
     "recency_days",
+    "is_recurring",
+    "amount_stability",
+]
+
+# The subset actually fed to clustering. On a personal-scale dataset the
+# cyclical day-of-week and recency features add dimensionality without signal
+# and depress separation (silhouette 0.27 with all 8 vs 0.43 with these 4 on
+# real data). Keep the vector small and every axis interpretable.
+CLUSTERING_COLUMNS = [
+    "log_amount",
+    "merchant_frequency",
     "is_recurring",
     "amount_stability",
 ]

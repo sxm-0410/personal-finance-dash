@@ -101,24 +101,43 @@ class PhonePeCSVAdapter:
                     mapping[canonical] = col
         return mapping
 
+    @staticmethod
+    def _looks_like_header(row: list[str]) -> bool:
+        cells = {c.strip().lower() for c in row}
+        return "date" in cells and any("amount" in c for c in cells)
+
     def parse(self, path: Path, password: str | None = None) -> ParseResult:
         result = ParseResult(source_file=path.name)
         with path.open(newline="", encoding="utf-8-sig") as fh:
-            reader = csv.DictReader(fh)
-            if not reader.fieldnames:
-                return result
-            cols = self._map_columns(reader.fieldnames)
-            for missing in ("date", "amount"):
-                if missing not in cols:
-                    result.unparsed.append(
-                        UnparsedLine(
-                            ",".join(reader.fieldnames),
-                            f"CSV missing required '{missing}' column",
-                        )
-                    )
-                    return result
+            all_rows = list(csv.reader(fh))
 
-            for row in reader:
+        # PhonePe CSVs carry a 1-2 line preamble ("Transaction Statement for…",
+        # "Duration,…") before the real header. Skip until we find it.
+        header_idx = next(
+            (i for i, r in enumerate(all_rows) if self._looks_like_header(r)), None
+        )
+        if header_idx is None:
+            result.unparsed.append(
+                UnparsedLine("", "CSV header row (Date/Amount) not found")
+            )
+            return result
+
+        fieldnames = [c.strip() for c in all_rows[header_idx]]
+        data_rows = all_rows[header_idx + 1 :]
+        reader = (dict(zip(fieldnames, r)) for r in data_rows if any(c.strip() for c in r))
+
+        cols = self._map_columns(fieldnames)
+        for missing in ("date", "amount"):
+            if missing not in cols:
+                result.unparsed.append(
+                    UnparsedLine(
+                        ",".join(fieldnames),
+                        f"CSV missing required '{missing}' column",
+                    )
+                )
+                return result
+
+        for row in reader:
                 raw_line = " | ".join(f"{k}={v}" for k, v in row.items())
                 date_str = row.get(cols["date"], "") or ""
                 time_str = row.get(cols.get("time", ""), "") if "time" in cols else None

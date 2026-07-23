@@ -19,7 +19,7 @@ from sklearn.metrics import adjusted_rand_score, silhouette_score
 from sklearn.preprocessing import StandardScaler
 
 from app.config import settings
-from app.models import FEATURE_COLUMNS
+from app.models import CLUSTERING_COLUMNS
 
 
 @dataclass
@@ -105,7 +105,7 @@ def _anomalies(
 
 def run_clustering(features_df: pd.DataFrame, spend_df: pd.DataFrame) -> ClusterResult:
     """features_df: rows aligned to spend_df (same order). spend_df has 'amount'."""
-    X_raw = features_df[FEATURE_COLUMNS].to_numpy(dtype=float)
+    X_raw = features_df[CLUSTERING_COLUMNS].to_numpy(dtype=float)
     scaler = StandardScaler()
     X = scaler.fit_transform(X_raw)
 
@@ -136,7 +136,7 @@ def run_clustering(features_df: pd.DataFrame, spend_df: pd.DataFrame) -> Cluster
         "k_sweep": sweep,
         "chosen_k": k,
         "pca_explained_variance": explained,
-        "feature_columns": FEATURE_COLUMNS,
+        "feature_columns": CLUSTERING_COLUMNS,
         "n_anomalies": int(flags.sum()),
     }
 
