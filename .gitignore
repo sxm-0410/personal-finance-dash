@@ -1,0 +1,36 @@
+# ── Financial data — NEVER commit ──────────────────────────
+data/
+*.pdf
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+merchant_overrides.yaml
+
+# ── Secrets / env ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Local editor / tool state ──────────────────────────────
+.claude/settings.local.json
+.vscode/
+.idea/
+.DS_Store
+
+# ── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# ── Node / frontend ────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+
+# ── Notebooks ──────────────────────────────────────────────
+.ipynb_checkpoints/
