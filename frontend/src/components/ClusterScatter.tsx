@@ -111,6 +111,7 @@ export default function ClusterScatter({
           <Tooltip content={<TooltipBox />} cursor={{ strokeDasharray: '3 3' }} />
           <Scatter
             data={normal}
+            isAnimationActive={false}
             onClick={(d: unknown) =>
               onSelect((d as ScatterPoint).cluster_index === selected
                 ? null
@@ -128,7 +129,7 @@ export default function ClusterScatter({
             ))}
           </Scatter>
           {/* Anomalies as hollow rings — shape encodes the flag, not color alone. */}
-          <Scatter data={anomalies} shape={<AnomalyRing />} />
+          <Scatter data={anomalies} shape={<AnomalyRing />} isAnimationActive={false} />
         </ScatterChart>
       </ResponsiveContainer>
 

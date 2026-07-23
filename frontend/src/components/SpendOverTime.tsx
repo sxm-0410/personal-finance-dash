@@ -103,6 +103,7 @@ export default function SpendOverTime({ data, selected }: Props) {
               fill={`url(#g${s.cluster_index})`}
               fillOpacity={dim ? 0.15 : 1}
               strokeOpacity={dim ? 0.3 : 1}
+              isAnimationActive={false}
             />
           )
         })}
